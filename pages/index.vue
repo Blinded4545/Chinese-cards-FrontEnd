@@ -1,22 +1,25 @@
 <template class="">
     <v-app class="" id="mainWrapper">
-        <div class="flex justify-center" id="searchWrapper">
-            <div class="grid w-full align-center gap-3" id="searchDiv">
+        <div class="flex justify-center content-center gap-4" id="searchWrapper">
+            <div class="w-full gap-3" id="searchDiv">
                 <v-text-field
                 name="name"
                 label="Word"
                 id="searchField"
+                density="compact"
+                hide-details="auto"
+                single-line
                 clearable
                 v-model="searchWord"
                 ></v-text-field>
             </div>
-            <v-btn color="success" class="self-center" @click="showOverlay">Add Card</v-btn>
+            <v-btn color="success" class="my-auto" @click="showOverlay">Add Card</v-btn>
         </div>
         <div class="gap-3" id="cardWrapper" >
             <cardGen class="cardHandler" v-for="(i,k) in Object.keys(changingStack)" :key="reRenderComp" :word="i" :meaning="changingStack[i]" @deleted="deleteData"></cardGen>
         </div>
 
-        <v-overlay v-model="overlayAddHandler">
+        <v-overlay v-model="overlayAddHandler" class="flex justify-center items-center">
             <overlayAdd @add="submitCard"></overlayAdd>
         </v-overlay>
 
@@ -85,7 +88,7 @@ export default {
             console.log("Deleted, now fetching new data");
             console.log(wordDeleted);
             
-            this.searchedStack.delete(wordDeleted);
+            this.fetchData();
 
         },
 
@@ -143,7 +146,7 @@ export default {
 <style>
 
 html{
-    background-color: lightskyblue;
+    background-color: white;
 }
 
 #searchWrapper{
@@ -166,9 +169,10 @@ html{
     height: 100%;
     display: grid;
     grid-template-columns: repeat(10, 7rem);
-    grid-template-rows: repeat(6,7rem);
+    grid-template-rows: repeat(auto,7rem);
     align-content: center; 
     justify-content: center;
+    margin-bottom: 3rem;
 }
 
 #cardHandler{
