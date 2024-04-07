@@ -1,6 +1,9 @@
 <template class="">
-    <v-app class="" id="mainWrapper">
-        <div class="flex justify-center content-center gap-4" id="searchWrapper">
+    <v-app class="" id="mainWrapper" v-if="loggedIn">
+        <div class="flex justify-center items-center my-7 gap-4 w-full" id="searchWrapper">
+            <v-btn color="secondary" class="my-auto" @click="showAccountOverlay">
+                <v-icon icon="mdi-account"></v-icon>
+            </v-btn>
             <div class="w-full gap-3" id="searchDiv">
                 <v-text-field
                 name="name"
@@ -13,16 +16,24 @@
                 v-model="searchWord"
                 ></v-text-field>
             </div>
-            <v-btn color="success" class="my-auto" @click="showOverlay">Add Card</v-btn>
+            <v-btn color="success" class="my-auto" @click="showAddOverlay">Add</v-btn>
         </div>
-        <div class="gap-3" id="cardWrapper" >
-            <cardGen class="cardHandler" v-for="(i,k) in Object.keys(changingStack)" :key="reRenderComp" :word="i" :meaning="changingStack[i]" @deleted="deleteData"></cardGen>
+        
+        <div class="p-2 gap-5 flex flex-wrap justify-center h-full w-full" >
+            <cardGen class="h-28 w-28 break-words" v-for="(i,k) in Object.keys(changingStack)" :key="reRenderComp" :word="i" :meaning="changingStack[i]" @deleted="deleteData"></cardGen>
         </div>
+
 
         <v-overlay v-model="overlayAddHandler" class="flex justify-center items-center">
             <overlayAdd @add="submitCard"></overlayAdd>
         </v-overlay>
 
+        <v-overlay v-model="overlayAccountHandler" class="flex justify-center items-center">
+            <overlayAccount :loggedInAcc="loggedIn" @logging="setLogin" @logout="setLogout"></overlayAccount>
+        </v-overlay>
+    </v-app>
+    <v-app v-else>
+            <overlayAccount :loggedInAcc="false" @logging="setLogin"></overlayAccount>
     </v-app>
 </template>
 
@@ -30,12 +41,14 @@
 
 import cardGen from "~/components/cardGen.vue"
 import overlayAdd from "~/components/overlayAdd.vue"
+import overlayAccount from "~/components/overlayAccount.vue"
 
 export default {
     name: "indexPage",
     components:{
         cardGen,
-        overlayAdd
+        overlayAdd,
+        overlayAccount
     },
     data(){
         return {
@@ -44,7 +57,9 @@ export default {
             searchedStack: {},
             changingStack: {},
             overlayAddHandler: false,
-            reRenderComp: false
+            overlayAccountHandler: false,
+            reRenderComp: false,
+            loggedIn: false
         }
     },
     methods: {
@@ -88,18 +103,27 @@ export default {
             console.log("Deleted, now fetching new data");
             console.log(wordDeleted);
             
-            this.fetchData();
+            this.fetchData()
 
         },
 
         async fetchData(){
-            let dataObtained = await useFetch('http://localhost:8000/getAll');
+            const c2 = useCookie("jwt")
+            console.log("Cookie value: ", c2.value);
+            let dataObtained = await useFetch("http://localhost:8000/getAll", {
+                method: "post",
+                credentials:"include",
+                Headers:{"Content-type": "application/json"},
+                body:{
+                    "token": c2.value
+                }
+            })
             let processed = JSON.parse(JSON.stringify(dataObtained["data"]));
             let finalData = Object.values(processed)[3];
 
             let passed = []
             finalData.forEach((e)=>{
-                passed=[e["meaning1"],e["meaning2"],e["meaning3"],e["meaning4"],e["meaning5"]];
+                passed=[e["Username"],e["meaning1"],e["meaning2"],e["meaning3"],e["meaning4"],e["meaning5"]];
                 this.searchedStack[e['word']] = passed;
             });
 
@@ -108,8 +132,11 @@ export default {
             
         },
 
-        showOverlay(){
+        showAddOverlay(){
             this.overlayAddHandler = !this.overlayAddHandler;
+        },
+        showAccountOverlay(){
+            this.overlayAccountHandler = !this.overlayAccoundHandler;
         },
 
         async submitCard(objectWord){
@@ -119,15 +146,35 @@ export default {
             if(nword=="" || means[0]==""){
                 return
             }else{
+                const c3 = useCookie("jwt")
                 const request2 = await $fetch('http://localhost:8000/add', {
                     method: "POST",
                     Headers:{"Content-type": "application/json"},
-                    body:JSON.stringify({"word": nword, "meaning1": means[0], "meaning2": means[1], "meaning3": means[2], "meaning4": means[3], "meaning5": means[4]})
+                    body:JSON.stringify({"word": nword, "token": c3.value, "meaning1": means[0], "meaning2": means[1], "meaning3": means[2], "meaning4": means[3], "meaning5": means[4]})
                 });
                 //this.overlayAdd = false;
                 this.fetchData();
             }
+        },
+
+        setLogin(){
+            this.loggedIn=true;
+            this.fetchData();
+        },
+        async setLogout(){
+            this.loggedIn=false;
+            this.searchedStack = {}
+            this.changingStack = {}
+            this.overlayAccountHandler = false
+            let c = useCookie("jwt")
+            c.value=null
+            await $fetch("http://localhost:8000/logout", {
+                method: "post",
+                credentials: "same-origin"
+            })
+            this.$forceUpdate()
         }
+
     },
     watch: {
         searchWord(){
@@ -136,7 +183,14 @@ export default {
     },
     created() {
         this.searchedStack = this.words;
-        this.fetchData();
+        const c1 = useCookie("jwt");
+        console.log(c1.value);
+        if(c1.value){
+            this.loggedIn=true;
+            this.fetchData();
+        }else{
+            this.loggedIn=false;
+        }
     },
     
 }
@@ -149,10 +203,6 @@ html{
     background-color: white;
 }
 
-#searchWrapper{
-    margin: 2rem;
-    width: 100%;
-}
 
 #searchDiv{
     grid-template-columns: auto min-content;
@@ -168,7 +218,6 @@ html{
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: repeat(10, 7rem);
     grid-template-rows: repeat(auto,7rem);
     align-content: center; 
     justify-content: center;

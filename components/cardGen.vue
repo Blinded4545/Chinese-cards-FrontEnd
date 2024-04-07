@@ -10,7 +10,7 @@
                 </v-card-text>
             </div>
         </v-card>
-
+        
         <v-overlay v-model="overlay" class="grid justify-center align-center w-screen h-screen">
       
             <v-card id="cardOverlay">
@@ -50,8 +50,9 @@ export default {
     },
     methods: {
         clicked(){
-            console.log(this.currWord, this.meanings);
+            console.log(this.currWord, this.meaning);
             this.overlay = !this.overlay;
+            
         },
         async deleteCard(){
             const request = await $fetch('http://localhost:8000/delete', {
@@ -62,6 +63,10 @@ export default {
             this.overlay=!this.overlay;
             this.$emit("deleted", this.currWord);
         }
+    },
+    created(){
+        this.meanings.splice(0,1)
+        console.log(this.meanings[0]);
     }
 }
 
