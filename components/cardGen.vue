@@ -1,5 +1,5 @@
-<template>
-    <v-app style="min-height: 0;">
+<template class="h-28 w-28">
+    <v-app>
         <v-card @click="clicked" >
             <div class="h-28 bg-purple-200">
                 <v-card-title primary-title>

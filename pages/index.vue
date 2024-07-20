@@ -1,14 +1,14 @@
-<template class="">
-    <v-app class="" id="mainWrapper" v-if="loggedIn">
+<template>
+    <div class="bg-gray-100" v-if="loggedIn">
         <div class="flex justify-center items-center my-7 gap-4 w-full" id="searchWrapper">
             <v-btn color="secondary" class="my-auto" @click="showAccountOverlay">
                 <v-icon icon="mdi-account"></v-icon>
             </v-btn>
-            <div class="w-full gap-3" id="searchDiv">
+            <div class="w-1/2 gap-3">
                 <v-text-field
                 name="name"
+                class="h-1/2"
                 label="Word"
-                id="searchField"
                 density="compact"
                 hide-details="auto"
                 single-line
@@ -31,7 +31,7 @@
         <v-overlay v-model="overlayAccountHandler" class="flex justify-center items-center">
             <overlayAccount :loggedInAcc="loggedIn" @logging="setLogin" @logout="setLogout"></overlayAccount>
         </v-overlay>
-    </v-app>
+    </div>
     <v-app v-else>
             <overlayAccount :loggedInAcc="false" @logging="setLogin"></overlayAccount>
     </v-app>
@@ -198,40 +198,4 @@ export default {
 </script>
 
 <style>
-
-html{
-    background-color: white;
-}
-
-
-#searchDiv{
-    grid-template-columns: auto min-content;
-    height: min-content;
-    width: 50%;
-}
-
-#searchField{
-    height: 50%
-}
-
-#cardWrapper{
-    width: 100%;
-    height: 100%;
-    display: grid;
-    grid-template-rows: repeat(auto,7rem);
-    align-content: center; 
-    justify-content: center;
-    margin-bottom: 3rem;
-}
-
-#cardHandler{
-    height: 7rem;
-    width: 7rem;
-    min-width: none;
-}
-
-.v-application__wrap {
-    min-height: fit-content;
-}
-
 </style>
